@@ -3,6 +3,7 @@ from supabase import create_client, Client
 import pandas as pd
 from datetime import datetime, timedelta
 import urllib.parse
+import time
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -116,7 +117,7 @@ if menu == "Growth Overview":
     st.subheader("Daily 5-Minute Local Growth Routine")
     st.info("""
     - **Step 1 (After Repair):** Log customer in **Repair CRM** and tap **Send WhatsApp + Review** (takes 10 seconds).
-    - **Step 2 (3x Per Week):** Click a photo of a repaired motherboard/MacBook, generate your post in **360 Content & 1-Tap Publisher**, and publish to **Instagram + Google Business Profile**.
+    - **Step 2 (3x Per Week):** Upload a photo of a repaired motherboard/MacBook in **360 Content & 1-Tap Publisher**, save to cloud (auto-updates your website with photo!), and post to **Instagram + Google Business Profile**.
     - **Step 3 (Within 24h):** Reply to every new Google review using **GMB Review Reply Engine** with Pimple Saudagar / Wakad keywords.
     """)
 
@@ -222,9 +223,9 @@ elif menu == "360 Content & 1-Tap Publisher":
     }
 
     with col1:
-        p_photo = st.file_uploader("Upload Repair Photo (Optional Preview)", type=["jpg", "jpeg", "png", "webp"])
+        p_photo = st.file_uploader("Upload Repair Photo (Auto-Publishes to Website)", type=["jpg", "jpeg", "png", "webp"])
         if p_photo:
-            st.image(p_photo, caption="Ready to share on Instagram, GMB & WhatsApp", use_container_width=True)
+            st.image(p_photo, caption="Ready to publish to Website, Instagram & GMB", use_container_width=True)
 
         p_model = st.text_input("Device Model", "Dell Inspiron 3521")
         selected_cat = st.selectbox("Repair Category (15 Options)", list(SERVICE_TEMPLATES.keys()))
@@ -235,7 +236,7 @@ elif menu == "360 Content & 1-Tap Publisher":
 
         p_area = st.selectbox("Target Area Keyword", ["Pimple Saudagar", "Wakad", "Thergaon", "Rahatani", "Hinjewadi", "Pimpri-Chinchwad"])
         p_note = st.text_area("Technical Summary (Auto-filled — Edit if needed)", value=SERVICE_TEMPLATES[selected_cat], height=110)
-        save_btn = st.button("Save Campaign to Cloud History", use_container_width=True)
+        save_btn = st.button("Save Campaign & Publish Photo to Website", use_container_width=True)
 
     with col2:
         gmb_text = (
@@ -271,14 +272,26 @@ elif menu == "360 Content & 1-Tap Publisher":
 
         if save_btn and db_connected:
             try:
+                uploaded_img_url = ""
+                if p_photo is not None:
+                    ext = p_photo.name.split(".")[-1].lower()
+                    file_path = f"repair_{int(time.time())}.{ext}"
+                    supabase.storage.from_("repair-photos").upload(
+                        file_path,
+                        p_photo.getvalue(),
+                        file_options={"content-type": p_photo.type}
+                    )
+                    uploaded_img_url = f"{SUPABASE_URL}/storage/v1/object/public/repair-photos/{file_path}"
+
                 supabase.table("marketing_posts").insert({
                     "device_model": p_model,
                     "service_type": p_service,
                     "area": p_area,
                     "gmb_post": gmb_text,
-                    "ig_caption": ig_text
+                    "ig_caption": ig_text,
+                    "image_url": uploaded_img_url
                 }).execute()
-                st.success("Campaign saved to Cloud & Live Website!")
+                st.success("Campaign & Photo published live to your Website!")
             except Exception as e:
                 st.error(f"Save Error: {e}")
 
