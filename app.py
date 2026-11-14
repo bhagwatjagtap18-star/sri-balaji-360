@@ -12,12 +12,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CREDENTIALS (Streamlit Cloud Secrets se safely load hongi) ---
-SUPABASE_URL = st.secrets.get("SUPABASE_URL", "https://whkvoyiwcsyhnvyauzyd.supabase.co")
-SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "")
-GMB_REVIEW_LINK = st.secrets.get("GMB_REVIEW_LINK", "https://g.page/r/CcA7OAT6SREBEBM/review")
-ADMIN_USER = st.secrets.get("ADMIN_USER", "admin")
-ADMIN_PASS = st.secrets.get("ADMIN_PASS", "balaji@2026")
+# --- CREDENTIALS ---
+SUPABASE_URL = st.secrets.get("SUPABASE_URL", "https://whkvoyiwcsyhnvyauzyd.supabase.co").strip()
+SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "").strip()
+GMB_REVIEW_LINK = st.secrets.get("GMB_REVIEW_LINK", "https://g.page/r/CcA7OAT6SREBEBM/review").strip()
+ADMIN_USER = st.secrets.get("ADMIN_USER", "admin").strip()
+ADMIN_PASS = st.secrets.get("ADMIN_PASS", "balaji@2026").strip()
 
 # --- AUTHENTICATION ---
 if "authenticated" not in st.session_state:
@@ -64,7 +64,7 @@ with st.sidebar:
     if db_connected:
         st.success("● Cloud Database Connected")
     else:
-        st.warning("● Add SUPABASE_KEY in Streamlit Secrets")
+        st.warning("● Add SUPABASE_KEY in Secrets")
 
     st.divider()
     custom_review_url = st.text_input("Direct Google Review Link:", value=GMB_REVIEW_LINK)
@@ -74,13 +74,14 @@ with st.sidebar:
         [
             "Growth Overview",
             "Repair CRM & WhatsApp Review",
-            "360 Content & API Publisher",
+            "360 Content & 1-Tap Publisher",
             "GMB Review Reply Engine"
         ]
     )
     st.divider()
-    st.markdown("**Live Links:**")
+    st.markdown("**Quick Launchers:**")
     st.markdown("- [sribalajiinfotech.co.in](https://sribalajiinfotech.co.in)")
+    st.markdown("- [Instagram Profile](https://www.instagram.com/)")
     st.markdown("- [Google Business Manager](https://business.google.com)")
     if st.button("Logout"):
         st.session_state.authenticated = False
@@ -91,7 +92,7 @@ if menu == "Growth Overview":
     st.header("Sri Balaji Infotech — 360 Growth Dashboard")
     total_repairs = 0
     total_rev = 0
-    reviews_sent = 0
+    posts_count = 0
 
     if db_connected:
         try:
@@ -100,21 +101,23 @@ if menu == "Growth Overview":
             if not df.empty:
                 total_repairs = len(df)
                 total_rev = df["amount"].sum()
-                reviews_sent = df["review_sent"].sum()
+
+            p_res = supabase.table("marketing_posts").select("id").execute()
+            posts_count = len(p_res.data) if p_res.data else 0
         except Exception as e:
             st.error(f"Error loading overview: {e}")
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Total Logged Repairs", total_repairs)
     c2.metric("Logged Revenue (₹)", f"₹{total_rev:,.0f}")
-    c3.metric("WhatsApp Review Requests", int(reviews_sent))
-    c4.metric("Website & SSL Status", "LIVE (HTTPS)")
+    c3.metric("360 Campaigns Created", posts_count)
+    c4.metric("Domain & SSL Status", "app.sribalajiinfotech.co.in")
 
-    st.subheader("Weekly Local SEO Checklist (Top 3 Map Ranking)")
+    st.subheader("Daily 5-Minute Local Growth Routine")
     st.info("""
-    - **Step 1:** Log every completed laptop/MacBook repair in **Repair CRM** and send the 1-tap WhatsApp Warranty + Review link.
-    - **Step 2:** Publish 2–3 repair case posts per week across **GMB + Instagram** using **360 Content Publisher** targeting *Pimple Saudagar, Wakad, and Thergaon*.
-    - **Step 3:** Reply to every new Google review within 24 hours using local area + chip-level keywords.
+    - **Step 1 (After Repair):** Log customer in **Repair CRM** and tap **Send WhatsApp + Review** (takes 10 seconds).
+    - **Step 2 (3x Per Week):** Click a photo of a repaired motherboard/MacBook, generate your post in **360 Content & 1-Tap Publisher**, and publish to **Instagram + Google Business Profile**.
+    - **Step 3 (Within 24h):** Reply to every new Google review using **GMB Review Reply Engine** with Pimple Saudagar / Wakad keywords.
     """)
 
 # --- 2. REPAIR CRM & WHATSAPP REVIEW ---
@@ -156,8 +159,6 @@ elif menu == "Repair CRM & WhatsApp Review":
                         st.rerun()
                     except Exception as e:
                         st.error(f"Database Save Error: {e}")
-                else:
-                    st.error("Database not connected. Please add SUPABASE_KEY in Secrets.")
 
     st.subheader("Recent Customers & Instant 1-Tap Review Message")
     if db_connected:
@@ -197,12 +198,16 @@ elif menu == "Repair CRM & WhatsApp Review":
         except Exception as e:
             st.error(f"Database Fetch Error: {e}")
 
-# --- 3. 360 CONTENT & API PUBLISHER ---
-elif menu == "360 Content & API Publisher":
-    st.header("360 Multi-Platform Content Publisher")
-    col1, col2 = st.columns([1, 1.3])
+# --- 3. 360 CONTENT & 1-TAP PUBLISHER (PHASE 2) ---
+elif menu == "360 Content & 1-Tap Publisher":
+    st.header("360 Multi-Platform 1-Tap Content Publisher")
+    col1, col2 = st.columns([1, 1.35])
 
     with col1:
+        p_photo = st.file_uploader("Upload Repair Photo (Optional Preview)", type=["jpg", "jpeg", "png", "webp"])
+        if p_photo:
+            st.image(p_photo, caption="Ready to share on Instagram, GMB & WhatsApp", use_container_width=True)
+
         p_model = st.text_input("Device Model", "Apple MacBook Pro M1")
         p_service = st.selectbox("Repair Category", [
             "Chip-Level Motherboard Micro-Soldering",
@@ -213,7 +218,7 @@ elif menu == "360 Content & API Publisher":
         ])
         p_area = st.selectbox("Target Area Keyword", ["Pimple Saudagar", "Wakad", "Thergaon", "Rahatani", "Hinjewadi", "Pimpri-Chinchwad"])
         p_note = st.text_area("Technical Summary", "Schematic-driven motherboard fault diagnosis and IC replacement with 100% data safety and 90-day warranty.")
-        gen_btn = st.button("Generate & Save 360 Campaign", use_container_width=True)
+        save_btn = st.button("Save Campaign to Cloud History", use_container_width=True)
 
     with col2:
         gmb_text = (
@@ -225,6 +230,7 @@ elif menu == "360 Content & API Publisher":
             f"Address: Shop No. A01, Sai Prem Park, Seven Star Lane, Mithila Nagari, Pimple Saudagar, Pune 411027\n"
             f"Call/WhatsApp: +91 77588 82128 | Website: https://sribalajiinfotech.co.in"
         )
+
         area_tag = p_area.replace(" ", "").replace("-", "")
         ig_text = (
             f"Precision Chip-Level Lab Work: {p_model} ({p_service}) restored back to 100% performance!\n\n"
@@ -232,10 +238,21 @@ elif menu == "360 Content & API Publisher":
             f"Location: Pimple Saudagar, Pune (Serving {p_area}, Wakad & PCMC)\n"
             f"WhatsApp +91 77588 82128 for ₹0 Free Diagnostic Checkup!\n"
             f"Website: https://sribalajiinfotech.co.in\n\n"
-            f"#SriBalajiInfotech #PimpleSaudagar #{area_tag} #PuneLaptopRepair #MacBookRepairPune #ChipLevelRepair #PCMC"
+            f"#SriBalajiInfotech #PimpleSaudagar #{area_tag} #PuneLaptopRepair #MacBookRepairPune #ChipLevelRepair #PCMC #LaptopServicePune #MotherboardRepair"
         )
 
-        if gen_btn and db_connected:
+        wa_promo_text = (
+            f"*Recent Lab Repair — Sri Balaji Infotech (Pimple Saudagar)*\n\n"
+            f"• *Device:* {p_model}\n"
+            f"• *Work Done:* {p_service}\n"
+            f"• *Details:* {p_note}\n\n"
+            f"Facing laptop, MacBook, or motherboard issues? Visit us for *₹0 Free Checkup & 90-Day Warranty*!\n"
+            f"*Website:* https://sribalajiinfotech.co.in\n"
+            f"*Call / WhatsApp:* +91 77588 82128"
+        )
+        wa_share_url = f"https://wa.me/?text={urllib.parse.quote(wa_promo_text)}"
+
+        if save_btn and db_connected:
             try:
                 supabase.table("marketing_posts").insert({
                     "device_model": p_model,
@@ -244,14 +261,38 @@ elif menu == "360 Content & API Publisher":
                     "gmb_post": gmb_text,
                     "ig_caption": ig_text
                 }).execute()
-                st.toast("Saved to Cloud Marketing Log!")
+                st.success("Campaign saved to Cloud Marketing History!")
             except Exception as e:
                 st.error(f"Save Error: {e}")
 
-        st.subheader("1. Google Business Profile Post")
-        st.code(gmb_text, language="text")
-        st.subheader("2. Instagram Post / Reel Caption")
-        st.code(ig_text, language="text")
+        # --- TABBED 1-TAP LAUNCHERS ---
+        tab_ig, tab_gmb, tab_wa = st.tabs(["1. Instagram Post", "2. Google Business (GMB)", "3. WhatsApp Status / Share"])
+
+        with tab_ig:
+            st.caption("Tap the top-right Copy icon inside the box below, then tap Open Instagram:")
+            st.code(ig_text, language="text")
+            st.link_button("Open Instagram to Post", "https://www.instagram.com/", use_container_width=True)
+
+        with tab_gmb:
+            st.caption("Tap the top-right Copy icon inside the box below, then tap Open Google Business:")
+            st.code(gmb_text, language="text")
+            st.link_button("Open Google Business Profile", "https://business.google.com/", use_container_width=True)
+
+        with tab_wa:
+            st.caption("Share directly to your WhatsApp Status or customer broadcast list in 1 tap:")
+            st.code(wa_promo_text, language="text")
+            st.link_button("1-Tap Share on WhatsApp", wa_share_url, use_container_width=True)
+
+    # --- RECENT MARKETING HISTORY ---
+    if db_connected:
+        st.divider()
+        st.subheader("Recent Saved 360 Campaigns")
+        try:
+            hist = supabase.table("marketing_posts").select("created_at, device_model, service_type, area").order("id", desc=True).limit(5).execute()
+            if hist.data:
+                st.dataframe(pd.DataFrame(hist.data), use_container_width=True, hide_index=True)
+        except Exception:
+            pass
 
 # --- 4. GMB REVIEW REPLY ENGINE ---
 elif menu == "GMB Review Reply Engine":
