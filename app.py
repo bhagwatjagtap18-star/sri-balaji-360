@@ -198,26 +198,43 @@ elif menu == "Repair CRM & WhatsApp Review":
         except Exception as e:
             st.error(f"Database Fetch Error: {e}")
 
-# --- 3. 360 CONTENT & 1-TAP PUBLISHER (PHASE 2) ---
+# --- 3. 360 CONTENT & 1-TAP PUBLISHER ---
 elif menu == "360 Content & 1-Tap Publisher":
     st.header("360 Multi-Platform 1-Tap Content Publisher")
     col1, col2 = st.columns([1, 1.35])
+
+    SERVICE_TEMPLATES = {
+        "Chip-Level Motherboard Micro-Soldering (Dead / No Power)": "Schematic-driven motherboard fault diagnosis, power rail short removal, and IC micro-soldering with 100% data safety and 90-day warranty.",
+        "Deep Motherboard Servicing, Thermal Repasting & Fan Cleaning": "Complete internal dust and oxidation cleaning, high-conductivity thermal paste application, and cooling fan servicing to eliminate overheating and lag.",
+        "NVMe SSD, RAM Upgrade & OS Speed Optimization": "High-speed NVMe SSD and DDR4/DDR5 RAM upgrade with seamless OS migration and zero data loss for 5x faster boot and multitasking.",
+        "Liquid / Water Damage Logic Board Revival": "Ultrasonic logic board cleaning, corroded circuit track restoration, and power IC replacement to revive water-damaged laptops without motherboard replacement.",
+        "BIOS Programming & No-Display / Boot Loop Fix": "Chip-level EC/Main BIOS flashing, display power circuit repair, and GPU/RAM rail troubleshooting to resolve black screen and boot loop issues.",
+        "Charging IC, USB-C Port & Power Jack Replacement": "Precision micro-soldering of charging IC, Mosfets, and damaged Type-C / DC power jack to restore stable battery charging.",
+        "Broken Laptop Hinge & Body Panel Fabrication": "Heavy-duty brass nut reinforcement, hinge alignment, and palmrest/bottom panel fabrication for smooth and durable lid movement.",
+        "Original OEM Display / Retina Screen Replacement": "Brand-new Full HD / Retina / Touch display panel replacement with true color calibration and scratch-free installation.",
+        "MacBook Flexgate / Display Backlight IC Repair": "Micro-soldering backlight driver IC and display flex cable restoration for MacBook Pro & Air without expensive full screen replacement.",
+        "Original Laptop / MacBook Battery Replacement": "Genuine high-cycle OEM battery replacement with power calibration and battery health verification.",
+        "Backlit Keyboard & Trackpad Replacement": "Precision replacement of faulty or liquid-damaged laptop keyboard and multi-touch trackpad with full key testing.",
+        "Gaming Laptop Overheating & GPU Thermal Servicing": "Dual-fan heatsink cleaning, VRM thermal pad replacement, and high-grade thermal compound repasting for peak gaming FPS stability.",
+        "SSD / Hard Drive Data Recovery & Backup": "Safe sector-level data extraction and backup from crashed laptops, dead motherboards, or corrupted drives.",
+        "Audio IC, Speaker & Wi-Fi Card Repair": "Internal speaker replacement, audio codec IC repair, and dual-band Wi-Fi/Bluetooth module restoration.",
+        "Custom Service (Enter Your Own Title Below)": "Complete hardware diagnosis and precision chip-level repair completed with genuine components and 90-day warranty."
+    }
 
     with col1:
         p_photo = st.file_uploader("Upload Repair Photo (Optional Preview)", type=["jpg", "jpeg", "png", "webp"])
         if p_photo:
             st.image(p_photo, caption="Ready to share on Instagram, GMB & WhatsApp", use_container_width=True)
 
-        p_model = st.text_input("Device Model", "Apple MacBook Pro M1")
-        p_service = st.selectbox("Repair Category", [
-            "Chip-Level Motherboard Micro-Soldering",
-            "Liquid / Water Damage Logic Board Revival",
-            "Broken Laptop Hinge & Body Fabrication",
-            "Original OEM Display / Retina Screen Replacement",
-            "NVMe SSD, RAM Upgrade & Thermal Repasting"
-        ])
+        p_model = st.text_input("Device Model", "Dell Inspiron 3521")
+        selected_cat = st.selectbox("Repair Category (15 Options)", list(SERVICE_TEMPLATES.keys()))
+        if selected_cat == "Custom Service (Enter Your Own Title Below)":
+            p_service = st.text_input("Custom Repair Title", "Custom Motherboard & Hardware Repair")
+        else:
+            p_service = selected_cat
+
         p_area = st.selectbox("Target Area Keyword", ["Pimple Saudagar", "Wakad", "Thergaon", "Rahatani", "Hinjewadi", "Pimpri-Chinchwad"])
-        p_note = st.text_area("Technical Summary", "Schematic-driven motherboard fault diagnosis and IC replacement with 100% data safety and 90-day warranty.")
+        p_note = st.text_area("Technical Summary (Auto-filled — Edit if needed)", value=SERVICE_TEMPLATES[selected_cat], height=110)
         save_btn = st.button("Save Campaign to Cloud History", use_container_width=True)
 
     with col2:
@@ -261,11 +278,10 @@ elif menu == "360 Content & 1-Tap Publisher":
                     "gmb_post": gmb_text,
                     "ig_caption": ig_text
                 }).execute()
-                st.success("Campaign saved to Cloud Marketing History!")
+                st.success("Campaign saved to Cloud & Live Website!")
             except Exception as e:
                 st.error(f"Save Error: {e}")
 
-        # --- TABBED 1-TAP LAUNCHERS ---
         tab_ig, tab_gmb, tab_wa = st.tabs(["1. Instagram Post", "2. Google Business (GMB)", "3. WhatsApp Status / Share"])
 
         with tab_ig:
@@ -283,7 +299,6 @@ elif menu == "360 Content & 1-Tap Publisher":
             st.code(wa_promo_text, language="text")
             st.link_button("1-Tap Share on WhatsApp", wa_share_url, use_container_width=True)
 
-    # --- RECENT MARKETING HISTORY ---
     if db_connected:
         st.divider()
         st.subheader("Recent Saved 360 Campaigns")
